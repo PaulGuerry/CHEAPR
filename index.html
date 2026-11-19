@@ -1,1 +1,1004 @@
-placeholder
+<!doctype html>
+<!-- CHEAPR calculator. Derivation: a single-centre cohort of 45 children, 23 events. Cohort medians and band frequencies embedded below are from the analysis run of 17 November 2026. Version 1.0.0. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CHEAPR Score Worksheet</title>
+<meta name="description" content="Scores CHEAPR at one or more visits after Kasai portoenterostomy and draws the course against the derivation cohort. Research instrument; computation is entirely in the browser.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Baseline reset. */
+:root {
+  color-scheme: light;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<style>
+/* Layout: a two-column worksheet — entry on the left, drawn course on the
+   right — collapsing to one column below 900px. Palette: paper neutrals with
+   a slight cyan bias, one indigo accent for the patient's own line, and
+   separate semantic hues for the three score bands. */
+:root {
+  --paper: #f7f8f8;
+  --card: #ffffff;
+  --ink: #16201f;
+  --ink-soft: #5b6a68;
+  --ink-faint: #8c9a98;
+  --rule: #dde3e2;
+  --rule-soft: #eceff0;
+  --accent: #2f4b8f;
+  --accent-soft: #e7ecf7;
+  --accent-ink: #ffffff;
+  --band-lo: #2f7a5a;
+  --band-mid: #a9741a;
+  --band-hi: #a3372c;
+  --warn-bg: #fdf4e8;
+  --warn-rule: #e8cfa3;
+  --warn-ink: #6d4a12;
+  --ok-bg: #eef6f1;
+  --ok-rule: #c2ddcd;
+  --ok-ink: #205c43;
+  --fail-line: #b0493d;
+  --ok-line: #2f7a5a;
+  --font-display: "IBM Plex Serif", Georgia, serif;
+  --font-body: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #101514;
+    --card: #182120;
+    --ink: #e8edec;
+    --ink-soft: #a3b1af;
+    --ink-faint: #76847f;
+    --rule: #2b3836;
+    --rule-soft: #212c2b;
+    --accent: #8fabe8;
+    --accent-soft: #1d2740;
+    --accent-ink: #101514;
+    --band-lo: #6fc39b;
+    --band-mid: #d8aa5a;
+    --band-hi: #e08477;
+    --warn-bg: #2a2114;
+    --warn-rule: #4d3c1f;
+    --warn-ink: #e6cb9a;
+    --ok-bg: #152420;
+    --ok-rule: #2c4a3c;
+    --ok-ink: #9cd3b7;
+    --fail-line: #e08477;
+    --ok-line: #6fc39b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #101514;
+  --card: #182120;
+  --ink: #e8edec;
+  --ink-soft: #a3b1af;
+  --ink-faint: #76847f;
+  --rule: #2b3836;
+  --rule-soft: #212c2b;
+  --accent: #8fabe8;
+  --accent-soft: #1d2740;
+  --accent-ink: #101514;
+  --band-lo: #6fc39b;
+  --band-mid: #d8aa5a;
+  --band-hi: #e08477;
+  --warn-bg: #2a2114;
+  --warn-rule: #4d3c1f;
+  --warn-ink: #e6cb9a;
+  --ok-bg: #152420;
+  --ok-rule: #2c4a3c;
+  --ok-ink: #9cd3b7;
+  --fail-line: #e08477;
+  --ok-line: #6fc39b;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; }
+h1 {
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 2px;
+  text-wrap: balance;
+}
+.sub { color: var(--ink-soft); margin: 0 0 20px; max-width: 64ch; }
+h2 {
+  font-family: var(--font-body);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 12px;
+}
+h3 { font-size: 0.95rem; font-weight: 600; margin: 0 0 6px; }
+p { margin: 0 0 10px; }
+a { color: var(--accent); }
+
+.notice {
+  border: 1px solid var(--warn-rule);
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+  border-radius: 3px;
+  padding: 13px 15px;
+  margin-bottom: 12px;
+  font-size: 0.875rem;
+}
+.notice strong { font-weight: 600; }
+.notice ul { margin: 7px 0 0; padding-left: 18px; }
+.notice li { margin-bottom: 3px; }
+.privacy {
+  border: 1px solid var(--ok-rule);
+  background: var(--ok-bg);
+  color: var(--ok-ink);
+  border-radius: 3px;
+  padding: 13px 15px;
+  margin-bottom: 26px;
+  font-size: 0.875rem;
+}
+
+.cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 26px; }
+/* A grid child defaults to min-width:auto, so the wide visits table would push
+   the page sideways instead of scrolling inside its own container. */
+.cols > div { min-width: 0; }
+@media (max-width: 900px) { .cols { grid-template-columns: minmax(0, 1fr); } }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+.card.flush { padding: 18px 0 14px; }
+.card.flush > h2, .card.flush > .pad { padding-left: 18px; padding-right: 18px; }
+
+.fixed-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+label { display: block; font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 4px; }
+input[type="number"], input[type="text"] {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--paper);
+  color: var(--ink);
+}
+input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.unit { color: var(--ink-faint); font-size: 0.76rem; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chip {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 3px 10px;
+  color: var(--ink-soft);
+}
+.chip b { color: var(--ink); font-weight: 500; }
+
+.tablescroll { overflow-x: auto; max-width: 100%; }
+table { border-collapse: collapse; width: 100%; min-width: 560px; }
+th, td { text-align: right; padding: 6px 5px; border-bottom: 1px solid var(--rule-soft); }
+th {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--rule);
+  white-space: nowrap;
+}
+th:first-child, td:first-child { text-align: left; }
+/* The header row is uppercased, which would render µmol/L as MMOL/L and
+   ×10⁹/L without its exponent reading correctly; units keep their own case. */
+th .unit { text-transform: none; letter-spacing: 0; }
+td { font-family: var(--font-mono); font-size: 0.86rem; font-variant-numeric: tabular-nums; }
+td input { padding: 5px 6px; font-size: 0.84rem; }
+td.vis input { min-width: 62px; }
+td.mo input { min-width: 66px; }
+td.lab input { min-width: 60px; }
+.total { font-weight: 500; }
+.band-lo { color: var(--band-lo); }
+.band-mid { color: var(--band-mid); }
+.band-hi { color: var(--band-hi); }
+.na { color: var(--ink-faint); }
+
+button {
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  font-weight: 500;
+  padding: 7px 13px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+}
+button:hover { border-color: var(--ink-faint); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button.icon { padding: 4px 9px; font-family: var(--font-mono); line-height: 1.1; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; }
+
+figure { margin: 0; }
+svg { display: block; width: 100%; height: auto; max-width: 100%; }
+figcaption { font-size: 0.8rem; color: var(--ink-soft); margin-top: 8px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 4px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { width: 18px; height: 0; border-top-width: 2px; border-top-style: solid; }
+
+.ref { font-size: 0.82rem; }
+.ref table { min-width: 0; }
+.ref td, .ref th { padding: 4px 6px; }
+textarea {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  width: 100%;
+  min-height: 108px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 8px;
+  resize: vertical;
+}
+.msg { font-size: 0.8rem; color: var(--ink-soft); }
+footer { margin-top: 30px; font-size: 0.8rem; color: var(--ink-faint); max-width: 72ch; }
+footer p { margin-bottom: 7px; }
+.langbar { display: flex; justify-content: flex-end; margin-bottom: 4px; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; }
+.seg button {
+  border: 0;
+  border-radius: 0;
+  padding: 4px 11px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  background: var(--card);
+  color: var(--ink-faint);
+}
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="langbar">
+    <div class="seg" role="group" id="langSeg">
+      <button type="button" data-lang="fr" aria-pressed="false">FR</button>
+      <button type="button" data-lang="en" aria-pressed="true">EN</button>
+    </div>
+  </div>
+  <h1 data-i18n="h1">CHEAPR Score Worksheet</h1>
+  <p class="sub" data-i18n="sub">Six-domain severity score after Kasai portoenterostomy, scored at one or
+    more follow-up visits, with the course drawn against the derivation cohort.</p>
+
+  <div class="notice" data-i18n-html="notice">
+    <strong>Research instrument. Not for clinical decision-making.</strong>
+  </div>
+
+  <div class="privacy" data-i18n-html="privacy">
+    <strong>Nothing you type leaves this page.</strong> Every value is scored in your own
+    browser on your own device.
+  </div>
+
+  <div class="cols">
+    <div>
+      <section class="card">
+        <h2 data-i18n="fixedH2">Fixed at surgery</h2>
+        <p class="sub" style="font-size:0.84rem;margin-bottom:14px" data-i18n="fixedSub">Two domains are set once
+          and do not change with follow-up: age at Kasai, and the platelet count on the
+          first post-operative day. Together they fix the floor the score cannot fall below.</p>
+        <div class="fixed-grid">
+          <div>
+            <label for="age"><span data-i18n="labAge">Age at Kasai</span> <span class="unit" data-i18n="unitDays">days</span></label>
+            <input type="number" id="age" min="0" max="400" step="1">
+          </div>
+          <div>
+            <label for="plq"><span data-i18n="labPlq">Platelets, day 1</span> <span class="unit">×10⁹/L</span></label>
+            <input type="number" id="plq" min="0" max="1500" step="1">
+          </div>
+        </div>
+        <div class="chip-row" id="fixedChips"></div>
+      </section>
+
+      <section class="card flush">
+        <h2 class="pad" data-i18n="visitsH2">Visits</h2>
+        <div class="tablescroll">
+          <table id="tbl">
+            <thead>
+              <tr>
+                <th data-i18n="thVisit">Visit</th><th data-i18n="thMonths">Months</th>
+                <th><span data-i18n="thBili">Bili</span><br><span class="unit">µmol/L</span></th>
+                <th><span data-i18n="thAst">AST</span><br><span class="unit" data-i18n="unitIU">IU/L</span></th>
+                <th><span data-i18n="thGgt">GGT</span><br><span class="unit" data-i18n="unitIU">IU/L</span></th>
+                <th><span data-i18n="thAlp">ALP</span><br><span class="unit" data-i18n="unitIU">IU/L</span></th>
+                <th>CHEAPR</th><th data-i18n="thBand">Band</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="pad btn-row">
+          <button id="addBtn" class="primary" data-i18n="btnAdd">Add visit</button>
+          <button id="exampleBtn" data-i18n="btnExample">Load example course</button>
+          <button id="clearBtn" data-i18n="btnClear">Clear all</button>
+        </div>
+        <p class="pad msg" id="entryMsg"></p>
+      </section>
+
+      <section class="card ref">
+        <h2 data-i18n="refH2">Domain thresholds</h2>
+        <div class="tablescroll">
+          <table>
+            <thead><tr><th data-i18n="thDomain">Domain</th><th data-i18n="thMarker">Marker</th><th data-i18n="th1pt">1 point</th><th>2</th><th>3</th></tr></thead>
+            <tbody id="refBody"></tbody>
+          </table>
+        </div>
+        <p class="msg" style="margin-top:10px" data-i18n="refNote">A total is given only where all six domains
+          are present. Score 6 to 18, higher being worse.</p>
+      </section>
+    </div>
+
+    <div>
+      <section class="card">
+        <h2 data-i18n="totH2">Total score against the derivation cohort</h2>
+        <div class="legend">
+          <span><i class="swatch" style="border-top-color:var(--accent)"></i><span data-i18n="legThis">This child</span></span>
+          <span><i class="swatch" style="border-top-color:var(--fail-line);border-top-style:dashed"></i><span data-i18n="legFail">Cohort median, failures</span></span>
+          <span><i class="swatch" style="border-top-color:var(--ok-line);border-top-style:dashed"></i><span data-i18n="legOk">Cohort median, successes</span></span>
+        </div>
+        <figure>
+          <svg id="figTotal" viewBox="0 0 560 300" role="img"
+               aria-label="CHEAPR total score over follow-up against cohort medians"></svg>
+          <figcaption id="capTotal"></figcaption>
+        </figure>
+      </section>
+
+      <section class="card">
+        <h2 data-i18n="domH2">Moving domains</h2>
+        <figure>
+          <svg id="figDomains" viewBox="0 0 560 250" role="img"
+               aria-label="The four domains that change with follow-up"></svg>
+          <figcaption data-i18n="domCap">Age at Kasai and day-1 platelets are fixed at surgery and are shown
+            as chips above, not as panels: a flat line carries no information the floor
+            does not already give.</figcaption>
+        </figure>
+      </section>
+
+      <section class="card ref">
+        <h2 data-i18n="bandH2">Observed outcomes by band, derivation cohort</h2>
+        <div class="tablescroll">
+          <table>
+            <thead><tr><th data-i18n="thBand2">Band</th><th>n</th><th data-i18n="thEvents">Events</th><th data-i18n="thTfs1">TFS 1 y</th><th data-i18n="thTfs2">TFS 2 y</th><th data-i18n="thTfs5">TFS 5 y</th></tr></thead>
+            <tbody id="bandBody"></tbody>
+          </table>
+        </div>
+        <p class="msg" style="margin-top:10px" data-i18n="bandNote">Observed transplant-free survival, Kaplan–Meier, in
+          the 41 children with a complete score at one month. Frequencies in a cohort of
+          this size carry wide uncertainty.</p>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ---- translation ----------------------------------------------------- */
+/* English is the text written into the HTML, so the page still reads if this
+   script never runs; French is applied over it. The chosen language is not
+   remembered between visits, because the page stores nothing at all. */
+const I18N = {
+  en: {
+    docTitle: "CHEAPR Score Worksheet",
+    segLabel: "Language",
+    h1: "CHEAPR Score Worksheet",
+    sub: "Six-domain severity score after Kasai portoenterostomy, scored at one or more follow-up visits, with the course drawn against the derivation cohort.",
+    notice: "<strong>Research instrument. Not for clinical decision-making.</strong>",
+    privacy: "<strong>Nothing you type leaves this page.</strong> Every value is scored in your own browser on your own device.",
+    fixedH2: "Fixed at surgery",
+    fixedSub: "Two domains are set once and do not change with follow-up: age at Kasai, and the platelet count on the first post-operative day. Together they fix the floor the score cannot fall below.",
+    labAge: "Age at Kasai", unitDays: "days", labPlq: "Platelets, day 1",
+    visitsH2: "Visits",
+    thVisit: "Visit", thMonths: "Months", thBili: "Bili", thAst: "AST",
+    thGgt: "GGT", thAlp: "ALP", thBand: "Band", unitIU: "IU/L",
+    btnAdd: "Add visit", btnExample: "Load example course", btnClear: "Clear all",
+    refH2: "Domain thresholds",
+    thDomain: "Domain", thMarker: "Marker", th1pt: "1 point",
+    refNote: "A total is given only where all six domains are present. Score 6 to 18, higher being worse.",
+    totH2: "Total score against the derivation cohort",
+    legThis: "This child", legFail: "Cohort median, failures",
+    legOk: "Cohort median, successes",
+    domH2: "Moving domains",
+    domCap: "Age at Kasai and day-1 platelets are fixed at surgery and are shown as chips above, not as panels: a flat line carries no information the floor does not already give.",
+    bandH2: "Observed outcomes by band, derivation cohort",
+    thBand2: "Band", thEvents: "Events",
+    thTfs1: "TFS 1 y", thTfs2: "TFS 2 y", thTfs5: "TFS 5 y",
+    bandNote: "Observed transplant-free survival, Kaplan–Meier, in the 41 children with a complete score at one month. Frequencies in a cohort of this size carry wide uncertainty.",
+    chipA: "A, age at Kasai", chipR: "R, platelets day 1", chipFloor: "Floor",
+    of3: " of 3", of18: " of 18", floor: "floor",
+    emptyChart: "Enter all four laboratory values at a visit to plot a score",
+    capNone: "No complete visit yet. A total needs all six domains.",
+    capOne: " scored visit.", capMany: " scored visits.",
+    capRest: "Cohort medians are dashed; the horizontal rule is this child's floor. Time runs on a square-root axis, so the early visits are legible beside the two-year one.",
+    noValues: "no values",
+    andR: " and R = ", notDrawn: " are fixed at surgery and are not drawn.",
+    entryNone: "No visits entered.",
+    entryMsgSing: "{done} of {n} visits has all four laboratory values and so a total.",
+    entryMsgPlur: "{done} of {n} visits have all four laboratory values and so a total.",
+    removeTitle: "Remove this visit",
+    axisTotal: "CHEAPR total", failures: "failures", successes: "successes",
+    ariaTotal: "CHEAPR total score over follow-up against cohort medians",
+    ariaDom: "The four domains that change with follow-up",
+    domCName: "Cholestasis", domCMarker: "Total bilirubin", domCUnit: "µmol/L",
+    domHName: "Hepatocellular", domHMarker: "AST", domHUnit: "IU/L",
+    domEName: "Biliary epithelium", domEMarker: "GGT", domEUnit: "IU/L",
+    domAName: "Age at Kasai", domAMarker: "Age at surgery", domAUnit: "days",
+    domPName: "Alkaline phosphatase", domPMarker: "ALP", domPUnit: "IU/L",
+    domRName: "Inflammatory reaction", domRMarker: "Platelets, day 1", domRUnit: "×10⁹/L"
+  },
+  fr: {
+    docTitle: "Score de suivi CHEAPR",
+    segLabel: "Langue",
+    h1: "Score de suivi CHEAPR",
+    sub: "Score de sévérité au cours du suivi après procédure de Kasai comparée aux évolutions de patients témoins.",
+    notice: "<strong>Outil de recherche. Valeur prédictive (très) incertaine.</strong>",
+    privacy: "<strong>Aucune donnée saisie ne quitte cette page.</strong> Toutes les valeurs sont calculées dans votre propre navigateur, sur votre propre appareil.",
+    fixedH2: "Paramètres fixes",
+    fixedSub: "Âge au Kasai et taux de plaquettes à J1 postop",
+    labAge: "Âge au Kasai", unitDays: "jours", labPlq: "Plaquettes, J1",
+    visitsH2: "Suivi",
+    thVisit: "Visite", thMonths: "Mois", thBili: "Bili", thAst: "ASAT",
+    thGgt: "GGT", thAlp: "PAL", thBand: "Classe", unitIU: "UI/L",
+    btnAdd: "Ajouter une visite", btnExample: "Charger un exemple",
+    btnClear: "Tout effacer",
+    refH2: "Seuils par domaine",
+    thDomain: "Domaine", thMarker: "Marqueur", th1pt: "1 point",
+    refNote: "Un total n'est calculé que si les six domaines sont renseignés. Score de 6 à 18, un score élevé étant péjoratif.",
+    totH2: "Score total face à la cohorte de dérivation",
+    legThis: "Cet enfant", legFail: "Médiane de la cohorte, échecs",
+    legOk: "Médiane de la cohorte, succès",
+    domH2: "Domaines évolutifs",
+    domCap: "L'âge au Kasai et les plaquettes de J1 sont fixés lors de l'intervention et figurent ci-dessus sous forme d'étiquettes plutôt qu'en panneaux : une ligne plate n'apporte rien que le plancher n'indique déjà.",
+    bandH2: "Devenir observé par classe, cohorte de dérivation",
+    thBand2: "Classe", thEvents: "Événements",
+    thTfs1: "SSG 1 an", thTfs2: "SSG 2 ans", thTfs5: "SSG 5 ans",
+    bandNote: "Survie sans greffe observée, Kaplan–Meier, chez les 41 enfants disposant d'un score complet à un mois. Résultats très incertains du fait du faible effectif.",
+    chipA: "A, âge au Kasai", chipR: "R, plaquettes J1", chipFloor: "Plancher",
+    of3: " sur 3", of18: " sur 18", floor: "plancher",
+    emptyChart: "Renseigner les quatre valeurs biologiques d'une visite pour tracer un score",
+    capNone: "Aucune visite complète. Un total exige les six domaines.",
+    capOne: " visite cotée.", capMany: " visites cotées.",
+    capRest: "Les médianes de la cohorte sont en tirets ; la règle horizontale est le plancher de cet enfant. Le temps suit un axe en racine carrée, de sorte que les visites précoces restent lisibles à côté de celle de deux ans.",
+    noValues: "aucune valeur",
+    andR: " et R = ",
+    notDrawn: " sont fixés lors de l'intervention et ne sont pas représentés.",
+    entryNone: "Aucune visite saisie.",
+    entryMsgSing: "{done} visite sur {n} comporte les quatre valeurs biologiques et donc un total.",
+    entryMsgPlur: "{done} visites sur {n} comportent les quatre valeurs biologiques et donc un total.",
+    removeTitle: "Supprimer cette visite",
+    axisTotal: "Total CHEAPR", failures: "échecs", successes: "succès",
+    ariaTotal: "Score CHEAPR total au cours du suivi, face aux médianes de la cohorte",
+    ariaDom: "Les quatre domaines qui varient au cours du suivi",
+    domCName: "Cholestase", domCMarker: "Bilirubine totale", domCUnit: "µmol/L",
+    domHName: "Cytolyse Hépatique", domHMarker: "ASAT", domHUnit: "UI/L",
+    domEName: "Épithélium biliaire", domEMarker: "GGT", domEUnit: "UI/L",
+    domAName: "Âge au Kasai", domAMarker: "Âge à la chirurgie", domAUnit: "jours",
+    domPName: "Phosphatases alcalines", domPMarker: "PAL", domPUnit: "UI/L",
+    domRName: "Réaction inflammatoire", domRMarker: "Plaquettes, J1", domRUnit: "×10⁹/L"
+  }
+};
+
+/* French for a French-speaking browser, English otherwise. The toggle
+   overrides it, and nothing about the choice is stored. */
+let LANG = /^fr\b/i.test(navigator.language || "") ? "fr" : "en";
+function t(key) {
+  const d = I18N[LANG];
+  return (d && d[key] !== undefined) ? d[key] : I18N.en[key];
+}
+
+function applyI18n() {
+  document.documentElement.lang = LANG;
+  document.title = t("docTitle");
+  const meta = document.querySelector('meta[name="description"]');
+  if (meta) meta.setAttribute("content", t("sub"));
+  document.querySelectorAll("[data-i18n]").forEach(e => {
+    e.textContent = t(e.getAttribute("data-i18n"));
+  });
+  document.querySelectorAll("[data-i18n-html]").forEach(e => {
+    e.innerHTML = t(e.getAttribute("data-i18n-html"));
+  });
+  const seg = document.getElementById("langSeg");
+  if (seg) {
+    seg.setAttribute("aria-label", t("segLabel"));
+    seg.querySelectorAll("button").forEach(b => {
+      b.setAttribute("aria-pressed", String(b.dataset.lang === LANG));
+    });
+  }
+  const ft = document.getElementById("figTotal");
+  if (ft) ft.setAttribute("aria-label", t("ariaTotal"));
+  const fd = document.getElementById("figDomains");
+  if (fd) fd.setAttribute("aria-label", t("ariaDom"));
+}
+
+/* A visit label is the user's own text, so it is rewritten only where it is
+   still one of the default labels; anything typed by hand is left alone. */
+function relabelPresets(from) {
+  state.visits.forEach(v => {
+    const p = PRESETS.find(q => q[from] === v.label);
+    if (p) v.label = p[LANG];
+  });
+}
+
+function setLang(lang) {
+  const from = LANG;
+  LANG = (lang === "fr") ? "fr" : "en";
+  if (from !== LANG) relabelPresets(from);
+  applyI18n();
+  renderRef();
+  render();
+}
+
+/* ---- the score ---- */
+const DOMAINS = [
+  /* Names, markers and units are looked up per language: a French reader
+     expects ASAT and PAL rather than AST and ALP. */
+  { k: "C", cuts: [60, 125],  field: "bili", moving: true },
+  { k: "H", cuts: [100, 200], field: "ast",  moving: true },
+  { k: "E", cuts: [500, 700], field: "ggt",  moving: true },
+  { k: "A", cuts: [60, 90],   field: "age",  moving: false },
+  { k: "P", cuts: [350, 450], field: "alp",  moving: true },
+  { k: "R", cuts: [325, 400], field: "plq",  moving: false }
+];
+const MOVING = DOMAINS.filter(d => d.moving);
+
+function points(v, cuts) {
+  if (v === null || !isFinite(v) || v <= 0) return null;
+  return v < cuts[0] ? 1 : v < cuts[1] ? 2 : 3;
+}
+function band(total) {
+  if (total === null) return null;
+  if (total <= 9) return { label: "6–9", cls: "band-lo" };
+  if (total <= 13) return { label: "10–13", cls: "band-mid" };
+  return { label: "14–18", cls: "band-hi" };
+}
+
+/* ---- aggregate figures from the derivation cohort -------------------- */
+/* Group medians of the total score, one row per visit. Counts differ by visit
+   because follow-up is incomplete; no individual data are held here. */
+const COHORT = [
+  { months: 0.25, fail: 12.0, nFail: 20, ok: 9.5, nOk: 14 },
+  { months: 1,    fail: 13.0, nFail: 19, ok: 9.0, nOk: 13 },
+  { months: 3,    fail: 13.0, nFail: 20, ok: 8.0, nOk: 10 },
+  { months: 6,    fail: 12.0, nFail: 17, ok: 9.0, nOk: 12 },
+  { months: 12,   fail: 11.0, nFail: 19, ok: 8.0, nOk: 14 },
+  { months: 24,   fail: 10.0, nFail: 17, ok: 8.0, nOk: 14 }
+];
+const BANDS = [
+  { label: "6–9",   n: 11, ev: 4,  tfs: ["89%", "89%", "58%"], cls: "band-lo" },
+  { label: "10–13", n: 20, ev: 10, tfs: ["72%", "66%", "36%"], cls: "band-mid" },
+  { label: "14–18", n: 10, ev: 7,  tfs: ["64%", "39%", "0%"],  cls: "band-hi" }
+];
+
+const PRESETS = [
+  { months: 0.25, en: "1 wk", fr: "1 sem" }, { months: 1,  en: "1 mo", fr: "1 mois" },
+  { months: 3,    en: "3 mo", fr: "3 mois" }, { months: 6, en: "6 mo", fr: "6 mois" },
+  { months: 12,   en: "1 y",  fr: "1 an" },   { months: 24, en: "2 y", fr: "2 ans" }
+];
+function presetLabel(months) {
+  const p = PRESETS.find(q => q.months === months);
+  return p ? p[LANG] : "";
+}
+/* Invented values, not a real child: a course that responds and then relapses,
+   so the figure shows something on first load. */
+const EXAMPLE = [
+  { months: 0.25, bili: 140, ast: 180, ggt: 640, alp: 420 },
+  { months: 1,    bili: 55,  ast: 130, ggt: 480, alp: 330 },
+  { months: 3,    bili: 18,  ast: 95,  ggt: 310, alp: 300 },
+  { months: 6,    bili: 22,  ast: 110, ggt: 420, alp: 340 },
+  { months: 12,   bili: 68,  ast: 170, ggt: 560, alp: 470 }
+];
+function exampleCourse() {
+  return EXAMPLE.map(v => Object.assign({ label: presetLabel(v.months) }, v));
+}
+
+/* The worksheet opens on a single empty one-week row. The example course is a
+   click away rather than the starting state, so nothing already in the table
+   can be mistaken for a child's own values. */
+function blankCourse() {
+  return [{ label: presetLabel(0.25), months: 0.25,
+            bili: "", ast: "", ggt: "", alp: "" }];
+}
+
+let state = {
+  age: null,
+  plq: null,
+  visits: []
+};
+
+/* ---- computation ----------------------------------------------------- */
+function fixedPoints() {
+  return {
+    A: points(state.age, [60, 90]),
+    R: points(state.plq, [325, 400])
+  };
+}
+function floorValue() {
+  const f = fixedPoints();
+  if (f.A === null || f.R === null) return null;
+  return f.A + f.R + MOVING.length;
+}
+function scoreVisit(v) {
+  const f = fixedPoints();
+  const pts = { A: f.A, R: f.R };
+  MOVING.forEach(d => { pts[d.k] = points(num(v[d.field]), d.cuts); });
+  const vals = DOMAINS.map(d => pts[d.k]);
+  const complete = vals.every(x => x !== null);
+  return { pts: pts, total: complete ? vals.reduce((a, b) => a + b, 0) : null };
+}
+function num(x) {
+  if (x === "" || x === null || x === undefined) return null;
+  const n = Number(x);
+  return isFinite(n) ? n : null;
+}
+function sortedVisits() {
+  return state.visits
+    .map((v, i) => ({ v: v, i: i }))
+    .sort((a, b) => (num(a.v.months) ?? 0) - (num(b.v.months) ?? 0))
+    .map(o => o.v);
+}
+
+/* ---- entry table ----------------------------------------------------- */
+const tbody = document.getElementById("tbody");
+
+function renderTable() {
+  tbody.textContent = "";
+  state.visits.forEach((v, idx) => {
+    const r = scoreVisit(v);
+    const b = band(r.total);
+    const tr = document.createElement("tr");
+
+    tr.appendChild(cellInput("text", v.label, idx, "label", "vis"));
+    tr.appendChild(cellInput("number", v.months, idx, "months", "mo"));
+    MOVING.forEach(d => tr.appendChild(cellInput("number", v[d.field], idx, d.field, "lab")));
+
+    const tdT = document.createElement("td");
+    tdT.className = "total " + (b ? b.cls : "na");
+    tdT.textContent = r.total === null ? "—" : String(r.total);
+    tr.appendChild(tdT);
+
+    const tdB = document.createElement("td");
+    tdB.className = b ? b.cls : "na";
+    tdB.textContent = b ? b.label : "—";
+    tr.appendChild(tdB);
+
+    const tdX = document.createElement("td");
+    const rm = document.createElement("button");
+    rm.className = "icon";
+    rm.textContent = "×";
+    rm.title = t("removeTitle");
+    rm.setAttribute("aria-label", t("removeTitle") + " " + (v.label || idx + 1));
+    rm.addEventListener("click", () => { state.visits.splice(idx, 1); render(); });
+    tdX.appendChild(rm);
+    tr.appendChild(tdX);
+
+    tbody.appendChild(tr);
+  });
+}
+
+function cellInput(type, value, idx, field, cls) {
+  const td = document.createElement("td");
+  td.className = cls;
+  const el = document.createElement("input");
+  el.type = type;
+  el.id = "f-" + field + "-" + idx;
+  el.value = value === null || value === undefined ? "" : value;
+  if (type === "number") { el.step = "any"; el.min = "0"; }
+  el.setAttribute("aria-label", field + ", visit " + (idx + 1));
+  el.addEventListener("input", () => {
+    state.visits[idx][field] = type === "number" ? el.value : el.value;
+    renderDerived();
+  });
+  td.appendChild(el);
+  return td;
+}
+
+/* ---- chips, reference tables ---------------------------------------- */
+function renderChips() {
+  const f = fixedPoints();
+  const fl = floorValue();
+  const box = document.getElementById("fixedChips");
+  box.textContent = "";
+  const items = [
+    [t("chipA"), f.A === null ? "—" : f.A + t("of3")],
+    [t("chipR"), f.R === null ? "—" : f.R + t("of3")],
+    [t("chipFloor"), fl === null ? "—" : fl + t("of18")]
+  ];
+  items.forEach(([k, val]) => {
+    const c = document.createElement("span");
+    c.className = "chip";
+    c.textContent = k + " ";
+    const b = document.createElement("b");
+    b.textContent = val;
+    c.appendChild(b);
+    box.appendChild(c);
+  });
+}
+
+function renderRef() {
+  const tb = document.getElementById("refBody");
+  tb.textContent = "";
+  DOMAINS.forEach(d => {
+    const tr = document.createElement("tr");
+    const cells = [
+      d.k + "  " + t("dom" + d.k + "Name"),
+      t("dom" + d.k + "Marker") + " (" + t("dom" + d.k + "Unit") + ")",
+      "< " + d.cuts[0],
+      d.cuts[0] + "–" + (d.cuts[1] - 1),
+      "≥ " + d.cuts[1]
+    ];
+    cells.forEach((t, i) => {
+      const td = document.createElement(i === 0 ? "th" : "td");
+      if (i === 0) td.style.textAlign = "left";
+      td.textContent = t;
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  });
+
+  const bb = document.getElementById("bandBody");
+  bb.textContent = "";
+  BANDS.forEach(b => {
+    const tr = document.createElement("tr");
+    const th = document.createElement("th");
+    th.textContent = b.label;
+    th.className = b.cls;
+    th.style.textAlign = "left";
+    tr.appendChild(th);
+    [b.n, b.ev].concat(b.tfs).forEach(t => {
+      const td = document.createElement("td");
+      td.textContent = t;
+      tr.appendChild(td);
+    });
+    bb.appendChild(tr);
+  });
+}
+
+/* ---- figures --------------------------------------------------------- */
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(name, attrs, text) {
+  const n = document.createElementNS(SVGNS, name);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+function xScaleFactory(w, pad, months) {
+  const all = months.concat([0.25, 24]);
+  const lo = Math.sqrt(Math.max(0.1, Math.min.apply(null, all)));
+  const hi = Math.sqrt(Math.max.apply(null, all));
+  const span = hi - lo || 1;
+  return m => pad.l + (Math.sqrt(Math.max(0.1, m)) - lo) / span * (w - pad.l - pad.r);
+}
+
+function drawTotal() {
+  const svg = document.getElementById("figTotal");
+  svg.textContent = "";
+  const W = 560, H = 300, pad = { l: 42, r: 74, t: 14, b: 34 };
+  const rows = sortedVisits().map(v => ({ v: v, s: scoreVisit(v) }))
+                             .filter(o => o.s.total !== null && num(o.v.months) !== null);
+  const months = rows.map(o => num(o.v.months));
+  const X = xScaleFactory(W, pad, months);
+  const Y = s => pad.t + (18 - s) / 12 * (H - pad.t - pad.b);
+  const ink = css("--ink-soft"), faint = css("--ink-faint"), rule = css("--rule-soft");
+
+  for (let s = 6; s <= 18; s += 2) {
+    svg.appendChild(el("line", { x1: pad.l, x2: W - pad.r, y1: Y(s), y2: Y(s), stroke: rule, "stroke-width": 1 }));
+    svg.appendChild(el("text", { x: pad.l - 8, y: Y(s) + 4, "text-anchor": "end",
+      fill: faint, "font-size": 10, "font-family": css("--font-mono") }, String(s)));
+  }
+  PRESETS.forEach(p => {
+    svg.appendChild(el("text", { x: X(p.months), y: H - pad.b + 16, "text-anchor": "middle",
+      fill: faint, "font-size": 10, "font-family": css("--font-mono") }, p[LANG]));
+  });
+  svg.appendChild(el("text", { x: 11, y: pad.t + 60, fill: faint, "font-size": 10,
+    transform: "rotate(-90 11 " + (pad.t + 60) + ")", "text-anchor": "middle" }, t("axisTotal")));
+
+  // cohort medians
+  [["fail", css("--fail-line"), t("failures")], ["ok", css("--ok-line"), t("successes")]].forEach(([key, col, lab]) => {
+    const pts = COHORT.map(c => X(c.months) + "," + Y(c[key])).join(" ");
+    svg.appendChild(el("polyline", { points: pts, fill: "none", stroke: col,
+      "stroke-width": 1.6, "stroke-dasharray": "5 3", opacity: 0.85 }));
+    const last = COHORT[COHORT.length - 1];
+    svg.appendChild(el("text", { x: X(last.months) + 6, y: Y(last[key]) + 4, fill: col,
+      "font-size": 10 }, lab));
+  });
+
+  // the child's floor and course
+  const fl = floorValue();
+  if (fl !== null) {
+    svg.appendChild(el("line", { x1: pad.l, x2: W - pad.r, y1: Y(fl), y2: Y(fl),
+      stroke: css("--accent"), "stroke-width": 1, opacity: 0.4, "stroke-dasharray": "2 3" }));
+    // Left of the plot, not right: the cohort median labels occupy the right
+    // margin, and at a floor of 8 the two would sit on the same baseline.
+    svg.appendChild(el("text", { x: pad.l + 5, y: Y(fl) - 5, fill: css("--accent"),
+      "font-size": 10, opacity: 0.9 }, t("floor") + " " + fl));
+  }
+  if (rows.length) {
+    const acc = css("--accent");
+    if (rows.length > 1) {
+      svg.appendChild(el("polyline", {
+        points: rows.map(o => X(num(o.v.months)) + "," + Y(o.s.total)).join(" "),
+        fill: "none", stroke: acc, "stroke-width": 2.2, "stroke-linejoin": "round"
+      }));
+    }
+    rows.forEach(o => {
+      const x = X(num(o.v.months)), y = Y(o.s.total);
+      svg.appendChild(el("circle", { cx: x, cy: y, r: 4, fill: acc }));
+      svg.appendChild(el("text", { x: x, y: y - 9, "text-anchor": "middle", fill: acc,
+        "font-size": 10, "font-weight": 600, "font-family": css("--font-mono") }, String(o.s.total)));
+    });
+  } else {
+    // Haloed, because the cohort medians are drawn beneath it.
+    svg.appendChild(el("text", { x: (pad.l + W - pad.r) / 2, y: (H - pad.b + pad.t) / 2,
+      "text-anchor": "middle", fill: faint, "font-size": 12,
+      stroke: css("--card"), "stroke-width": 4, "paint-order": "stroke" },
+      t("emptyChart")));
+  }
+
+  const n = rows.length;
+  const cap = document.getElementById("capTotal");
+  cap.textContent = n === 0 ? t("capNone")
+    : n + (n === 1 ? t("capOne") : t("capMany")) + " " + t("capRest");
+}
+
+function drawDomains() {
+  const svg = document.getElementById("figDomains");
+  svg.textContent = "";
+  const W = 560, H = 250, cols = 2, rowsN = 2;
+  const gap = { x: 26, y: 34 }, pad = { l: 34, r: 14, t: 20, b: 40 };
+  const pw = (W - pad.l - pad.r - gap.x) / cols;
+  const ph = (H - pad.t - pad.b - gap.y) / rowsN;
+  const faint = css("--ink-faint"), rule = css("--rule-soft"), acc = css("--accent");
+  const rows = sortedVisits().filter(v => num(v.months) !== null);
+  const months = rows.map(v => num(v.months));
+  const f = fixedPoints();
+
+  MOVING.forEach((d, i) => {
+    const cx = pad.l + (i % cols) * (pw + gap.x);
+    const cy = pad.t + Math.floor(i / cols) * (ph + gap.y);
+    const X = m => {
+      const all = months.concat([0.25, 24]);
+      const lo = Math.sqrt(Math.max(0.1, Math.min.apply(null, all)));
+      const hi = Math.sqrt(Math.max.apply(null, all));
+      return cx + (Math.sqrt(Math.max(0.1, m)) - lo) / ((hi - lo) || 1) * pw;
+    };
+    const Y = p => cy + ph - (p - 1) / 2 * ph;
+
+    svg.appendChild(el("text", { x: cx, y: cy - 7, fill: css("--ink"), "font-size": 10.5,
+      "font-weight": 600 }, d.k + "  " + t("dom" + d.k + "Marker")));
+    for (let p = 1; p <= 3; p++) {
+      svg.appendChild(el("line", { x1: cx, x2: cx + pw, y1: Y(p), y2: Y(p), stroke: rule, "stroke-width": 1 }));
+      svg.appendChild(el("text", { x: cx - 7, y: Y(p) + 3.5, "text-anchor": "end", fill: faint,
+        "font-size": 9, "font-family": css("--font-mono") }, String(p)));
+    }
+    const series = rows.map(v => ({ m: num(v.months), p: points(num(v[d.field]), d.cuts) }))
+                       .filter(o => o.p !== null);
+    if (series.length > 1) {
+      svg.appendChild(el("polyline", { points: series.map(o => X(o.m) + "," + Y(o.p)).join(" "),
+        fill: "none", stroke: acc, "stroke-width": 1.8, "stroke-linejoin": "round" }));
+    }
+    series.forEach(o => svg.appendChild(el("circle", { cx: X(o.m), cy: Y(o.p), r: 3, fill: acc })));
+    if (!series.length) {
+      svg.appendChild(el("text", { x: cx + pw / 2, y: cy + ph / 2, "text-anchor": "middle",
+        fill: faint, "font-size": 10 }, t("noValues")));
+    }
+    // End ticks only on the bottom row: six labels would collide at this width,
+    // and the panels share the axis of the chart directly above.
+    if (i >= MOVING.length - cols) {
+      svg.appendChild(el("text", { x: cx, y: cy + ph + 13, fill: faint, "font-size": 9,
+        "font-family": css("--font-mono") }, presetLabel(0.25)));
+      svg.appendChild(el("text", { x: cx + pw, y: cy + ph + 13, "text-anchor": "end",
+        fill: faint, "font-size": 9, "font-family": css("--font-mono") }, presetLabel(24)));
+    }
+  });
+
+  svg.appendChild(el("text", { x: pad.l, y: H - 6, fill: faint, "font-size": 9.5 },
+    "A = " + (f.A === null ? "—" : f.A) + t("andR") + (f.R === null ? "—" : f.R) +
+    t("notDrawn")));
+}
+
+/* ---- wiring ---------------------------------------------------------- */
+function renderDerived() { renderChips(); renderTable_totalsOnly(); drawTotal(); drawDomains(); renderMsg(); }
+function renderTable_totalsOnly() {
+  // Totals and bands change with every keystroke, but rebuilding the inputs
+  // would steal focus mid-entry, so only the computed cells are rewritten.
+  Array.prototype.forEach.call(tbody.children, (tr, idx) => {
+    const v = state.visits[idx];
+    if (!v) return;
+    const r = scoreVisit(v), b = band(r.total);
+    const tdT = tr.children[6], tdB = tr.children[7];
+    tdT.className = "total " + (b ? b.cls : "na");
+    tdT.textContent = r.total === null ? "—" : String(r.total);
+    tdB.className = b ? b.cls : "na";
+    tdB.textContent = b ? b.label : "—";
+  });
+}
+function renderMsg() {
+  const n = state.visits.length;
+  const done = state.visits.filter(v => scoreVisit(v).total !== null).length;
+  const msg = document.getElementById("entryMsg");
+  msg.textContent = n === 0 ? t("entryNone")
+    /* French puts nought and one in the singular, English only one. */
+    : t(done === 1 || (LANG === "fr" && done === 0) ? "entryMsgSing" : "entryMsgPlur")
+        .replace("{done}", done).replace("{n}", n);
+}
+function render() { renderTable(); renderDerived(); }
+
+document.getElementById("age").addEventListener("input", e => {
+  state.age = num(e.target.value); renderDerived();
+});
+document.getElementById("plq").addEventListener("input", e => {
+  state.plq = num(e.target.value); renderDerived();
+});
+document.getElementById("addBtn").addEventListener("click", () => {
+  const used = state.visits.map(v => num(v.months));
+  const next = PRESETS.find(p => used.indexOf(p.months) === -1);
+  state.visits.push(next
+    ? { label: next[LANG], months: next.months, bili: "", ast: "", ggt: "", alp: "" }
+    : { label: "", months: "", bili: "", ast: "", ggt: "", alp: "" });
+  render();
+});
+document.getElementById("exampleBtn").addEventListener("click", () => {
+  state.age = 72; state.plq = 380;
+  document.getElementById("age").value = 72;
+  document.getElementById("plq").value = 380;
+  state.visits = exampleCourse();
+  render();
+});
+document.getElementById("clearBtn").addEventListener("click", () => {
+  state.visits = blankCourse();
+  render();
+});
+const mq = window.matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", () => { drawTotal(); drawDomains(); });
+new MutationObserver(() => { drawTotal(); drawDomains(); })
+  .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+document.getElementById("langSeg").addEventListener("click", ev => {
+  const b = ev.target.closest("button[data-lang]");
+  if (b) setLang(b.dataset.lang);
+});
+
+state.visits = blankCourse();
+setLang(LANG);
+</script>
+</body>
+</html>
